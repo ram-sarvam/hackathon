@@ -29,11 +29,13 @@ export async function POST(req: Request) {
     }
 
     const submissionLink = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/submit/${meeting._id}`;
+    const meetingData = meeting.toJSON();
 
     return NextResponse.json({ 
       success: true, 
       meeting: {
-        ...meeting.toJSON(),
+        ...meetingData,
+        _id: meeting._id.toString(), // Ensure ID is a string
         submissionLink
       }
     });

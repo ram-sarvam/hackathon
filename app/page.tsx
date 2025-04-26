@@ -32,8 +32,11 @@ const Home = () => {
       }
 
       const data = await response.json();
+      if (!data.success || !data.meeting) {
+        throw new Error(data.error || 'Failed to create meeting');
+      }
       toast.success('Meeting created successfully!');
-      window.location.href = `/meetings/${data.meeting.id}`;
+      window.location.href = `/meetings/${data.meeting._id}`;
     } catch (error) {
       toast.error('Failed to create meeting. Please try again.');
       console.error("Failed to create meeting:", error);
