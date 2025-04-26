@@ -182,81 +182,86 @@ export default function MeetingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-md p-6">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-5xl mx-auto">
         {meeting && (
           <>
-            <div className="flex justify-between items-center mb-6">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">{meeting.title}</h1>
-                <p className="text-gray-600 mt-2 text-lg">{meeting.agenda}</p>
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 mb-8">
+              <div className="flex justify-between items-start mb-8">
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-900 mb-3">{meeting.title}</h1>
+                  <p className="text-gray-600 text-lg max-w-2xl">{meeting.agenda}</p>
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={copySubmissionLink}
+                    className="bg-white border-2 border-blue-600 text-blue-600 px-6 py-2.5 rounded-lg hover:bg-blue-50 flex items-center gap-2 transition-all duration-200 font-medium"
+                    title="Share this link with teams to submit their projects"
+                  >
+                    {copied ? (
+                      <>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                        Link Copied!
+                      </>
+                    ) : (
+                      <>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                          <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
+                          <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" />
+                        </svg>
+                        Share Submission Link
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
-              <div className="flex gap-3">
+
+              {!isPresentationMode && meeting.submissions?.length > 0 && (
                 <button
-                  onClick={copySubmissionLink}
-                  className="bg-blue-600 text-white px-6 py-2.5 rounded-lg hover:bg-blue-700 flex items-center gap-2 transition-all duration-200 shadow-sm hover:shadow-md"
-                  title="Share this link with teams to submit their projects"
+                  onClick={
+                    meeting.status === "presented"
+                      ? () => (window.location.href = `/evaluate/${params.id}`)
+                      : startPresentation
+                  }
+                  className={`${
+                    meeting.status === "presented"
+                      ? "bg-blue-600 hover:bg-blue-700"
+                      : "bg-green-600 hover:bg-green-700"
+                  } text-white px-8 py-4 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md flex items-center gap-3 text-lg font-medium w-full justify-center`}
                 >
-                  {copied ? (
+                  {meeting.status === "presented" ? (
                     <>
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
+                        <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm9.707 5.707a1 1 0 00-1.414-1.414L9 12.586l-1.293-1.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                       </svg>
-                      Link Copied!
+                      Start Project Evaluation
                     </>
                   ) : (
                     <>
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
-                        <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" />
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
                       </svg>
-                      Share Submission Link
+                      Start Presentations
                     </>
                   )}
                 </button>
-              </div>
+              )}
             </div>
 
-            {!isPresentationMode && meeting.submissions?.length > 0 && (
-              <button
-                onClick={
-                  meeting.status === "presented"
-                    ? () => (window.location.href = `/evaluate/${params.id}`)
-                    : startPresentation
-                }
-                className={`${
-                  meeting.status === "presented"
-                    ? "bg-blue-500 hover:bg-blue-600"
-                    : "bg-green-500 hover:bg-green-600"
-                } text-white px-6 py-3 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md flex items-center gap-2 text-lg font-medium`}
-              >
-                {meeting.status === "presented" ? (
-                  <>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
-                      <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
-                      <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm9.707 5.707a1 1 0 00-1.414-1.414L9 12.586l-1.293-1.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                    Start Project Evaluation
-                  </>
-                ) : (
-                  <>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
-                    </svg>
-                    Start Presentations
-                  </>
-                )}
-              </button>
-            )}
-
             {isPresentationMode && (
-              <div className="mb-6 p-6 bg-blue-50 rounded-lg shadow-sm border border-blue-100">
-                <div className="flex justify-between items-center mb-4">
+              <div className="bg-white rounded-xl shadow-sm border border-blue-200 p-8 mb-8">
+                <div className="flex justify-between items-start mb-6">
                   <div>
-                    <h3 className="text-xl font-semibold text-blue-900">
-                      Now Presenting: {meeting.submissions[currentSubmissionIndex].teamName}
-                    </h3>
-                    <p className="text-blue-700 mt-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="h-3 w-3 rounded-full bg-blue-500 animate-pulse"></div>
+                      <h3 className="text-2xl font-semibold text-gray-900">
+                        Now Presenting: {meeting.submissions[currentSubmissionIndex].teamName}
+                      </h3>
+                    </div>
+                    <p className="text-blue-600 font-medium">
                       Presentation {currentSubmissionIndex + 1} of {meeting.submissions.length}
                     </p>
                   </div>
@@ -264,7 +269,7 @@ export default function MeetingPage() {
                     {!isRecording ? (
                       <button
                         onClick={startRecording}
-                        className="bg-red-600 text-white px-5 py-2.5 rounded-lg hover:bg-red-700 transition-all duration-200 shadow-sm hover:shadow-md flex items-center gap-2"
+                        className="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-all duration-200 shadow-sm hover:shadow-md flex items-center gap-2 font-medium"
                         title="Start recording the presentation"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -275,7 +280,7 @@ export default function MeetingPage() {
                     ) : (
                       <button
                         onClick={stopRecording}
-                        className="bg-gray-700 text-white px-5 py-2.5 rounded-lg hover:bg-gray-800 transition-all duration-200 shadow-sm hover:shadow-md flex items-center gap-2"
+                        className="bg-gray-800 text-white px-6 py-3 rounded-lg hover:bg-gray-900 transition-all duration-200 shadow-sm hover:shadow-md flex items-center gap-2 font-medium"
                         title="Stop recording and analyze the presentation"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -286,20 +291,20 @@ export default function MeetingPage() {
                     )}
                     <button
                       onClick={endPresentation}
-                      className="bg-gray-500 text-white px-5 py-2.5 rounded-lg hover:bg-gray-600 transition-all duration-200 shadow-sm hover:shadow-md flex items-center gap-2"
+                      className="border-2 border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 transition-all duration-200 flex items-center gap-2 font-medium"
                       title="Exit presentation mode"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
                       </svg>
-                      Exit Presentation Mode
+                      Exit
                     </button>
                   </div>
                 </div>
                 {isRecording && finalTranscript && (
-                  <div className="mt-4 p-4 bg-white rounded-lg border border-blue-200">
-                    <h4 className="font-medium text-blue-900 mb-2 flex items-center gap-2">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <div className="mt-6 bg-gray-50 rounded-lg border border-gray-200 p-6">
+                    <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
                         <path d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" />
                       </svg>
                       Live Transcript
@@ -310,13 +315,13 @@ export default function MeetingPage() {
               </div>
             )}
 
-            <div className="mb-8">
-              <h2 className="text-xl font-semibold mb-4">Submissions</h2>
-              <div className="grid gap-4">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Project Submissions</h2>
+              <div className="grid gap-6">
                 {meeting?.submissions?.map((submission, index) => (
                   <div
                     key={index}
-                    className="border rounded-lg p-4 transition-all duration-200 hover:shadow-md"
+                    className="border border-gray-200 rounded-lg p-6 transition-all duration-200 hover:shadow-md bg-white"
                   >
                     <div
                       onClick={() =>
@@ -328,23 +333,22 @@ export default function MeetingPage() {
                       className="flex justify-between items-center cursor-pointer"
                     >
                       <div>
-                        <h3 className="text-lg font-semibold">
+                        <h3 className="text-xl font-semibold text-gray-900">
                           {submission.teamName}
                         </h3>
-                        <p className="text-sm text-gray-500">
-                          Submitted:{" "}
-                          {new Date(submission.submittedAt).toLocaleString()}
+                        <p className="text-sm text-gray-500 mt-1">
+                          Submitted: {new Date(submission.submittedAt).toLocaleString()}
                         </p>
                       </div>
                       <button
-                        className="text-gray-600 hover:text-gray-800 transition-all duration-200 flex items-center gap-2"
-                        style={{
+                        className="text-gray-600 hover:text-gray-900 transition-all duration-200 flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-gray-50"
+                        
+                      >
+                        <svg style={{
                           transform: expandedSubmissions[submission._id]
                             ? "rotate(180deg)"
                             : "rotate(0deg)",
-                        }}
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        }} xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                           <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                         </svg>
                         {expandedSubmissions[submission._id] ? "Hide Details" : "View Project Details"}
@@ -557,50 +561,99 @@ export default function MeetingPage() {
                     </div>
 
                     {meeting?.analysis?.[submission._id] && (
-                      <div className="mt-4 p-4 bg-gray-50 rounded-md">
-                        <h4 className="font-semibold mb-2">
-                          Presentation Analysis
-                        </h4>
+                      <div className="mt-6 border-t border-gray-100 pt-4">
+                        <button
+                          onClick={() =>
+                            setExpandedSubmissions((prev) => ({
+                              ...prev,
+                              [`${submission._id}_analysis`]: !prev[`${submission._id}_analysis`],
+                            }))
+                          }
+                          className="w-full text-left px-4 py-3 rounded-lg hover:bg-gray-50 transition-all duration-200 flex items-center justify-between"
+                        >
+                          <div className="flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
+                              <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
+                              <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
+                            </svg>
+                            <span className="font-medium text-gray-900">Presentation Analysis</span>
+                          </div>
+                          <svg
+                            style={{
+                              transform: expandedSubmissions[`${submission._id}_analysis`]
+                                ? "rotate(180deg)"
+                                : "rotate(0deg)",
+                            }}
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-5 w-5 text-gray-500 transition-transform duration-200"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </button>
+                        <div
+                          className={`overflow-hidden transition-all duration-200 ${
+                            expandedSubmissions[`${submission._id}_analysis`]
+                              ? "max-h-[1000px] opacity-100 mt-4"
+                              : "max-h-0 opacity-0"
+                          }`}
+                        >
+                          <div className="bg-gray-50 rounded-lg p-6 space-y-6">
+                            <div>
+                              <h5 className="text-sm font-medium text-green-600 mb-2 flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                </svg>
+                                Strengths
+                              </h5>
+                              <ul className="list-disc list-inside text-sm space-y-1">
+                                {meeting?.analysis?.[submission._id]?.pros.map(
+                                  (pro: string, i: number) => (
+                                    <li key={i} className="text-gray-700">{pro}</li>
+                                  )
+                                )}
+                              </ul>
+                            </div>
 
-                        <div className="mb-3">
-                          <h5 className="text-sm font-medium text-green-600">
-                            Pros:
-                          </h5>
-                          <ul className="list-disc list-inside text-sm">
-                            {meeting?.analysis?.[submission._id]?.pros.map(
-                              (pro: string, i: number) => (
-                                <li key={i}>{pro}</li>
-                              )
-                            )}
-                          </ul>
-                        </div>
+                            <div>
+                              <h5 className="text-sm font-medium text-red-600 mb-2 flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v4a1 1 0 102 0V7zm0 6a1 1 0 10-2 0 1 1 0 102 0z" clipRule="evenodd" />
+                                </svg>
+                                Areas for Improvement
+                              </h5>
+                              <ul className="list-disc list-inside text-sm space-y-1">
+                                {meeting?.analysis?.[submission._id]?.cons.map(
+                                  (con: string, i: number) => (
+                                    <li key={i} className="text-gray-700">{con}</li>
+                                  )
+                                )}
+                              </ul>
+                            </div>
 
-                        <div className="mb-3">
-                          <h5 className="text-sm font-medium text-red-600">
-                            Areas for Improvement:
-                          </h5>
-                          <ul className="list-disc list-inside text-sm">
-                            {meeting?.analysis?.[submission._id]?.cons.map(
-                              (con: string, i: number) => (
-                                <li key={i}>{con}</li>
-                              )
-                            )}
-                          </ul>
-                        </div>
-
-                        <div>
-                          <h5 className="text-sm font-medium text-blue-600">
-                            Suggested Questions:
-                          </h5>
-                          <ul className="list-disc list-inside text-sm">
-                            {meeting?.analysis?.[
-                              submission._id
-                            ]?.suggestedQuestions.map(
-                              (q: string, i: number) => (
-                                <li key={i}>{q}</li>
-                              )
-                            )}
-                          </ul>
+                            <div>
+                              <h5 className="text-sm font-medium text-blue-600 mb-2 flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+                                </svg>
+                                Suggested Questions
+                              </h5>
+                              <ul className="list-disc list-inside text-sm space-y-1">
+                                {meeting?.analysis?.[
+                                  submission._id
+                                ]?.suggestedQuestions.map(
+                                  (q: string, i: number) => (
+                                    <li key={i} className="text-gray-700">{q}</li>
+                                  )
+                                )}
+                              </ul>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     )}
