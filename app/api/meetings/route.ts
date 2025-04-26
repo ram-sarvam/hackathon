@@ -44,26 +44,15 @@ export async function POST(req: Request) {
   }
 }
 
-interface Meeting {
-  id: string;
-  title: string;
-  agenda: string;
-  pdf?: string;
-  participantCount?: number;
-  createdAt: string;
-  status: 'pending' | 'active' | 'completed';
-}
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
     await connectDB();
-    const meetings = await Meeting.find().sort({ createdAt: -1 }).exec();
+    const userId = new URL(req.url).searchParams.get('userId');
+    const meetings = await Meeting.find({userId}).sort({ createdAt: -1 }).exec();
     return NextResponse.json({ 
       success: true, 
-      meetings: meetings.map(m => ({
-        ...m.toJSON(),
-        _id: m._id.toString(), // Ensure ID is a string
-      }))
+      meetings
     });
   } catch (error) {
     return NextResponse.json({ success: false, error: 'Failed to fetch meetings' }, { status: 500 });

@@ -38,6 +38,7 @@ export default function MeetingPage() {
   const [copied, setCopied] = useState(false);
   const [isPresentationMode, setIsPresentationMode] = useState(false);
   const [currentSubmissionIndex, setCurrentSubmissionIndex] = useState(-1);
+  const [expandedSubmissions, setExpandedSubmissions] = useState<{[key: string]: boolean}>({});
   const [isRecording, setIsRecording] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
@@ -230,22 +231,59 @@ export default function MeetingPage() {
               <h2 className="text-xl font-semibold mb-4">Submissions</h2>
               <div className="grid gap-4">
                 {meeting?.submissions?.map((submission, index) => (
-                  <div key={index} className="border rounded-lg p-4">
-                    <div className="flex justify-between items-start mb-4">
+                  <div key={index} className="border rounded-lg p-4 transition-all duration-200 hover:shadow-md">
+                    <div 
+                      onClick={() => setExpandedSubmissions(prev => ({
+                        ...prev,
+                        [submission._id]: !prev[submission._id]
+                      }))}
+                      className="flex justify-between items-center cursor-pointer"
+                    >
                       <div>
                         <h3 className="text-lg font-semibold">{submission.teamName}</h3>
                         <p className="text-sm text-gray-500">
                           Submitted: {new Date(submission.submittedAt).toLocaleString()}
                         </p>
+                      </div>
+                      <button 
+                        className="text-gray-500 hover:text-gray-700 transition-transform duration-200"
+                        style={{ transform: expandedSubmissions[submission._id] ? 'rotate(180deg)' : 'rotate(0deg)' }}
+                      >
+                        ▼
+                      </button>
+                    </div>
+
+                    <div className={`mt-4 space-y-4 transition-all duration-200 overflow-hidden ${expandedSubmissions[submission._id] ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'}`}>
+                      <div className="flex gap-4 items-center">
                         <a 
                           href={submission.pdfUrl} 
                           target="_blank" 
                           rel="noopener noreferrer"
-                          className="text-blue-600 hover:underline text-sm"
+                          className="text-blue-600 hover:underline text-sm inline-flex items-center gap-1"
                         >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                          </svg>
                           View Submission
                         </a>
                       </div>
+
+                      {submission.submissionInfo && (
+                        <div className="space-y-3 p-4 bg-gray-50 rounded-md">
+                          {submission.submissionInfo.ideaName && (
+                            <div>
+                              <h4 className="text-sm font-medium text-gray-700">Idea Name:</h4>
+                              <p className="text-sm text-gray-600">{submission.submissionInfo.ideaName}</p>
+                            </div>
+                          )}
+                          {submission.submissionInfo.docSummary && (
+                            <div>
+                              <h4 className="text-sm font-medium text-gray-700">Summary:</h4>
+                              <p className="text-sm text-gray-600">{JSON.stringify(submission.submissionInfo.docSummary)}</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     {meeting?.analysis?.[submission._id] && (
