@@ -9,15 +9,22 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "axios": "^1.9.0",
+    "express": "^5.1.0",
     "framer-motion": "^12.9.2",
     "mongoose": "^8.14.0",
+    "multer": "^1.4.5-lts.2",
     "next": "15.3.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-hot-toast": "^2.5.2"
+    "react-hot-toast": "^2.5.2",
+    "uuid": "^11.1.0",
+    "zustand": "^5.0.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/express": "^5.0.1",
+    "@types/multer": "^1.4.12",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

@@ -7,12 +7,12 @@ export async function POST(req: Request) {
     await connectDB();
     const data = await req.json();
     
-    const { title, agenda, participantCount } = data;
+    const { title, agenda, participantCount, userId } = data;
     
-    if (!title || !agenda) {
+    if (!title || !agenda || !userId) {
       return NextResponse.json({ 
         success: false, 
-        error: 'Title and agenda are required' 
+        error: 'Title, agenda, and user ID are required' 
       }, { status: 400 });
     }
 
@@ -20,6 +20,7 @@ export async function POST(req: Request) {
       title,
       agenda,
       participantCount: parseInt(participantCount) || 1,
+      userId,
       status: 'pending',
       submissions: []
     });
@@ -28,15 +29,13 @@ export async function POST(req: Request) {
       throw new Error('Failed to create meeting in database');
     }
 
-    const submissionLink = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/submit/${meeting._id}`;
     const meetingData = meeting.toJSON();
 
     return NextResponse.json({ 
       success: true, 
       meeting: {
         ...meetingData,
-        _id: meeting._id.toString(), // Ensure ID is a string
-        submissionLink
+        id: meeting._id.toString(), // Ensure ID is a string
       }
     });
   } catch (error) {
@@ -63,7 +62,7 @@ export async function GET() {
       success: true, 
       meetings: meetings.map(m => ({
         ...m.toJSON(),
-        submissionLink: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/submit/${m._id}`
+        _id: m._id.toString(), // Ensure ID is a string
       }))
     });
   } catch (error) {
