@@ -35,7 +35,7 @@ export async function POST(req: Request) {
       success: true, 
       meeting: {
         ...meetingData,
-        id: meeting._id.toString(), // Ensure ID is a string
+        id: (meeting._id as string).toString(), // Ensure ID is a string
       }
     });
   } catch (error) {

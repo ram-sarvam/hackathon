@@ -4,7 +4,7 @@ import Meeting from "@/app/models/Meeting";
 import { v4 as uuidv4 } from "uuid";
 import mongoose from "mongoose";
 
-const PDF_PARSER_API_URL = "http://localhost:3000/api/parse"; // Replace with your actual PDF parsing API endpoint
+const PDF_PARSER_API_URL = "/api/parse"; // Replace with your actual PDF parsing API endpoint
 
 export async function POST(req: Request) {
   try {
