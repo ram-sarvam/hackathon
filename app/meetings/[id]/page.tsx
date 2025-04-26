@@ -345,7 +345,7 @@ export default function MeetingPage() {
                               <h4 className="text-sm font-medium text-gray-700">
                                 Idea Name:
                               </h4>
-                              <p className="text-sm text-gray-600 flex items-center justify-center gap-2">
+                              <p className="text-sm text-gray-600 flex items-center gap-2">
                                 {submission.submissionInfo.ideaName} <LoaderIcon className="animate-spin" />
                               </p>
                             </div>
