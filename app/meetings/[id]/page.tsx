@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { IMeeting } from '@/app/models/Meeting';
+import { toast } from 'react-hot-toast';
+import { SpeechRecognition } from '@/app/types/speech';
 
 interface Presentation {
   id: string;
@@ -16,10 +18,31 @@ interface Presentation {
   };
 }
 
+interface SubmissionWithAnalysis {
+  teamName: string;
+  pdfUrl: string;
+  submittedAt: Date;
+  submissionInfo?: {
+    analysis?: {
+      pros: string[];
+      cons: string[];
+      suggestedQuestions: string[];
+    };
+    transcript?: string;
+  };
+}
+
 export default function MeetingPage() {
   const params = useParams();
   const [meeting, setMeeting] = useState<IMeeting | null>(null);
   const [copied, setCopied] = useState(false);
+  const [isPresentationMode, setIsPresentationMode] = useState(false);
+  const [currentSubmissionIndex, setCurrentSubmissionIndex] = useState(-1);
+  const [isRecording, setIsRecording] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const [transcriptParts, setTranscriptParts] = useState<string[]>([]);
+  const [finalTranscript, setFinalTranscript] = useState<string>("");
 
   useEffect(() => {
     const fetchMeeting = async () => {
@@ -39,6 +62,104 @@ export default function MeetingPage() {
     navigator.clipboard.writeText(submissionLink);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const startPresentation = () => {
+    setIsPresentationMode(true);
+    setCurrentSubmissionIndex(0);
+  };
+
+  const endPresentation = () => {
+    setIsPresentationMode(false);
+    setCurrentSubmissionIndex(-1);
+    setIsRecording(false);
+  };
+
+  const startRecording = async () => {
+    try {
+      // Initialize speech recognition
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        throw new Error('Speech recognition not supported in this browser');
+      }
+
+      const recognition = new SpeechRecognition();
+      recognitionRef.current = recognition;
+      
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.maxAlternatives = 1;
+      
+      recognition.onresult = (event: SpeechRecognitionEvent) => {
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const result = event.results[i];
+          if (result.isFinal) {
+            setTranscriptParts(prev => [...prev, result[0].transcript]);
+            setFinalTranscript(prev => prev + ' ' + result[0].transcript);
+          }
+        }
+      };
+
+      recognition.onerror = (event: SpeechRecognitionEvent) => {
+        console.error('Speech recognition error:', event.error);
+        toast.error('Speech recognition error: ' + event.error);
+      };
+
+      recognition.start();
+      setIsRecording(true);
+      setTranscriptParts([]); // Reset transcript parts
+      setFinalTranscript(''); // Reset final transcript
+    } catch (error) {
+      console.error('Error starting recording:', error);
+      toast.error('Failed to start recording');
+    }
+  };
+
+  const stopRecording = async () => {
+    if (recognitionRef.current && isRecording) {
+      recognitionRef.current.stop();
+      setIsRecording(false);
+
+      toast.loading('Analyzing presentation...');
+
+      try {
+        // Analyze the transcript
+        const response = await fetch('/api/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ transcript: finalTranscript, submissionId: meeting?.submissions[currentSubmissionIndex]._id, meetingId: meeting?._id })
+        });
+
+        if (!response.ok) throw new Error('Analysis failed');
+        
+        const { analysis } = await response.json();
+
+        toast.dismiss();
+        
+        // Update the submission with analysis
+        const updatedMeeting = { ...meeting } as IMeeting;
+        if (!updatedMeeting.submissions) updatedMeeting.submissions = [];
+        if (!updatedMeeting.submissions[currentSubmissionIndex].analysis) {
+          updatedMeeting.submissions[currentSubmissionIndex].analysis = {};
+        }
+        updatedMeeting.submissions[currentSubmissionIndex].analysis = analysis;
+        
+        toast.dismiss();
+        setMeeting(updatedMeeting);
+        setFinalTranscript(''); // Reset transcript for next presentation
+        
+        // Move to next submission if available
+        if (currentSubmissionIndex < (meeting?.submissions.length || 0) - 1) {
+          setCurrentSubmissionIndex(prev => prev + 1);
+        } else {
+          endPresentation();
+          toast.success('All presentations completed!');
+        }
+      } catch (error) {
+        console.error('Error analyzing transcript:', error);
+        toast.error('Failed to analyze presentation');
+      }
+    }
   };
 
   return (
@@ -61,6 +182,59 @@ export default function MeetingPage() {
               </div>
             </div>
 
+            {!isPresentationMode && meeting.submissions?.length > 0 && (
+              <button
+                onClick={startPresentation}
+                className="mb-6 bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700"
+              >
+                Begin Presentation Mode
+              </button>
+            )}
+
+            {isPresentationMode && (
+              <div className="mb-6 p-4 bg-blue-50 rounded-lg">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-semibold">
+                    Presenting: {meeting.submissions[currentSubmissionIndex].teamName}
+                  </h3>
+                  <div className="flex gap-2">
+                    {!isRecording ? (
+                      <button
+                        onClick={startRecording}
+                        className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
+                      >
+                        Start Recording
+                      </button>
+                    ) : (
+                      <button
+                        onClick={stopRecording}
+                        className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700"
+                      >
+                        Stop Recording
+                      </button>
+                    )}
+                    <button
+                      onClick={endPresentation}
+                      className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
+                    >
+                      End Presentation Mode
+                    </button>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="text-sm text-gray-600">
+                    Presentation {currentSubmissionIndex + 1} of {meeting.submissions.length}
+                  </div>
+                  {isRecording && finalTranscript && (
+                    <div className="p-3 bg-white rounded border text-sm">
+                      <h4 className="font-medium mb-1">Live Transcript:</h4>
+                      <p className="text-gray-600">{finalTranscript}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             <div className="mb-8">
               <h2 className="text-xl font-semibold mb-4">Submissions</h2>
               <div className="grid gap-4">
@@ -82,12 +256,43 @@ export default function MeetingPage() {
                         </a>
                       </div>
                     </div>
+
+                    {submission.analysis && (
+                      <div className="mt-4 p-4 bg-gray-50 rounded-md">
+                        <h4 className="font-semibold mb-2">Presentation Analysis</h4>
+                        
+                        <div className="mb-3">
+                          <h5 className="text-sm font-medium text-green-600">Pros:</h5>
+                          <ul className="list-disc list-inside text-sm">
+                            {submission.analysis.pros.map((pro: string, i: number) => (
+                              <li key={i}>{pro}</li>
+                            ))}
+                          </ul>
+                        </div>
+
+                        <div className="mb-3">
+                          <h5 className="text-sm font-medium text-red-600">Areas for Improvement:</h5>
+                          <ul className="list-disc list-inside text-sm">
+                            {submission.analysis.cons.map((con: string, i: number) => (
+                              <li key={i}>{con}</li>
+                            ))}
+                          </ul>
+                        </div>
+
+                        <div>
+                          <h5 className="text-sm font-medium text-blue-600">Suggested Questions:</h5>
+                          <ul className="list-disc list-inside text-sm">
+                            {submission.analysis.suggestedQuestions.map((q: string, i: number) => (
+                              <li key={i}>{q}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
             </div>
-
-          
           </>
         )}
       </div>

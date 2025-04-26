@@ -12,6 +12,8 @@ export interface IMeeting extends Document {
     pdfUrl: string;
     submittedAt: Date;
     submissionInfo?: Record<string, any>;
+    analysis?: Record<string, any>;
+    _id: string;
   }[];
 }
 
@@ -30,7 +32,8 @@ const MeetingSchema = new Schema({
     teamName: { type: String, required: true },
     pdfUrl: { type: String, required: true },
     submittedAt: { type: Date, default: Date.now },
-    submissionInfo: { type: Schema.Types.Mixed }
+    submissionInfo: { type: Schema.Types.Mixed },
+    analysis: { type: Schema.Types.Mixed }
   }]
 });
 
