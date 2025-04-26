@@ -12,9 +12,9 @@ export interface IMeeting extends Document {
     pdfUrl: string;
     submittedAt: Date;
     submissionInfo?: Record<string, any>;
-    analysis?: Record<string, any>;
     _id: string;
   }[];
+  analysis?: Record<string, any>;
 }
 
 const MeetingSchema = new Schema({
@@ -33,8 +33,12 @@ const MeetingSchema = new Schema({
     pdfUrl: { type: String, required: true },
     submittedAt: { type: Date, default: Date.now },
     submissionInfo: { type: Schema.Types.Mixed },
-    analysis: { type: Schema.Types.Mixed }
-  }]
+  }],
+  analysis: { type: Schema.Types.Mixed }
 });
 
-export default mongoose.models.Meeting || mongoose.model<IMeeting>('Meeting', MeetingSchema);
+if (mongoose.models.Meeting) {
+  delete mongoose.models.Meeting;
+}
+
+export default mongoose.model<IMeeting>('Meeting', MeetingSchema);

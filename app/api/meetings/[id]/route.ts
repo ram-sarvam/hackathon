@@ -16,7 +16,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
   await connectDB();
   const id = params.id;
   const data = await req.json();
-  const { title, agenda, participantCount, status } = data;
+  const { title, agenda, participantCount, status, submissions } = data;
   const meeting = await Meeting.findById(id);
   if (!meeting) {
     return NextResponse.json({ success: false, error: 'Meeting not found' }, { status: 404 });
@@ -25,6 +25,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
   meeting.agenda = agenda;
   meeting.participantCount = participantCount;
   meeting.status = status;
+  meeting.submissions = submissions;
   await meeting.save();
   return NextResponse.json({ success: true, meeting: meeting.toJSON() });
 }

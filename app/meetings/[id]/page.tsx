@@ -127,22 +127,13 @@ export default function MeetingPage() {
         const response = await fetch('/api/analyze', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ transcript: finalTranscript, submissionId: meeting?.submissions[currentSubmissionIndex]._id, meetingId: meeting?._id })
+          body: JSON.stringify({ transcript: finalTranscript, meetingId: meeting?._id, submissionId: meeting?.submissions[currentSubmissionIndex]?._id })
         });
 
         if (!response.ok) throw new Error('Analysis failed');
         
-        const { analysis } = await response.json();
+        const { updatedMeeting } = await response.json();
 
-        toast.dismiss();
-        
-        // Update the submission with analysis
-        const updatedMeeting = { ...meeting } as IMeeting;
-        if (!updatedMeeting.submissions) updatedMeeting.submissions = [];
-        if (!updatedMeeting.submissions[currentSubmissionIndex].analysis) {
-          updatedMeeting.submissions[currentSubmissionIndex].analysis = {};
-        }
-        updatedMeeting.submissions[currentSubmissionIndex].analysis = analysis;
         
         toast.dismiss();
         setMeeting(updatedMeeting);
@@ -257,14 +248,14 @@ export default function MeetingPage() {
                       </div>
                     </div>
 
-                    {submission.analysis && (
+                    {meeting?.analysis?.[submission._id] && (
                       <div className="mt-4 p-4 bg-gray-50 rounded-md">
                         <h4 className="font-semibold mb-2">Presentation Analysis</h4>
                         
                         <div className="mb-3">
                           <h5 className="text-sm font-medium text-green-600">Pros:</h5>
                           <ul className="list-disc list-inside text-sm">
-                            {submission.analysis.pros.map((pro: string, i: number) => (
+                            {meeting?.analysis?.[submission._id]?.pros.map((pro: string, i: number) => (
                               <li key={i}>{pro}</li>
                             ))}
                           </ul>
@@ -273,7 +264,7 @@ export default function MeetingPage() {
                         <div className="mb-3">
                           <h5 className="text-sm font-medium text-red-600">Areas for Improvement:</h5>
                           <ul className="list-disc list-inside text-sm">
-                            {submission.analysis.cons.map((con: string, i: number) => (
+                            {meeting?.analysis?.[submission._id]?.cons.map((con: string, i: number) => (
                               <li key={i}>{con}</li>
                             ))}
                           </ul>
@@ -282,7 +273,7 @@ export default function MeetingPage() {
                         <div>
                           <h5 className="text-sm font-medium text-blue-600">Suggested Questions:</h5>
                           <ul className="list-disc list-inside text-sm">
-                            {submission.analysis.suggestedQuestions.map((q: string, i: number) => (
+                            {meeting?.analysis?.[submission._id]?.suggestedQuestions.map((q: string, i: number) => (
                               <li key={i}>{q}</li>
                             ))}
                           </ul>

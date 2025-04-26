@@ -6,7 +6,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
 export async function POST(req: Request) {
   try {
-    const { transcript, submissionId, meetingId } = await req.json();
+    const { transcript, meetingId, submissionId } = await req.json();
     
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
     
@@ -55,13 +55,22 @@ ${transcript}`;
       suggestedQuestions: json.suggestedQuestions
     };
 
-    await Meeting.updateOne(
-      { _id: meetingId },
-      { $set: { 'submissions.$[submission].analysis': analysis } },
-      { arrayFilters: [{ 'submission._id': submissionId }] }
-    );
+    const meeting = await Meeting.findById(meetingId);
+    if (!meeting) {
+      return NextResponse.json({ success: false, error: 'Meeting not found' }, { status: 404 });
+    }
 
-    return NextResponse.json({ analysis });
+
+    meeting.analysis = {
+      ...meeting.analysis,
+      [submissionId]: analysis
+    };
+
+    await meeting.save();
+
+    const updatedMeeting = await Meeting.findById(meetingId);
+
+    return NextResponse.json({ analysis, updatedMeeting });
   } catch (error) {
     console.error('Analysis error:', error);
     return NextResponse.json({ error: 'Failed to analyze presentation' }, { status: 500 });
