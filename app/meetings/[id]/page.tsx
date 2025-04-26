@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
 import { IMeeting } from "@/app/models/Meeting";
-import { toast } from "react-hot-toast";
+import { LoaderIcon, toast } from "react-hot-toast";
 
 
 export default function MeetingPage() {
@@ -345,8 +345,8 @@ export default function MeetingPage() {
                               <h4 className="text-sm font-medium text-gray-700">
                                 Idea Name:
                               </h4>
-                              <p className="text-sm text-gray-600">
-                                {submission.submissionInfo.ideaName}
+                              <p className="text-sm text-gray-600 flex items-center justify-center gap-2">
+                                {submission.submissionInfo.ideaName} <LoaderIcon className="animate-spin" />
                               </p>
                             </div>
                           )}
@@ -523,9 +523,8 @@ export default function MeetingPage() {
                               </div>
                             ) : (
                               <div className="text-center py-8">
-                                <p className="text-gray-500">
-                                  No summary available. Try using the parse
-                                  endpoint for AI-generated project analysis.
+                                <p className="text-gray-500 flex items-center justify-center gap-2">
+                                 We're generating a summary for this project. Please check back soon! <LoaderIcon className="animate-spin" />
                                 </p>
                               </div>
                             )}
