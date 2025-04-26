@@ -21,11 +21,12 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
   if (!meeting) {
     return NextResponse.json({ success: false, error: 'Meeting not found' }, { status: 404 });
   }
-  meeting.title = title;
-  meeting.agenda = agenda;
-  meeting.participantCount = participantCount;
-  meeting.status = status;
-  meeting.submissions = submissions;
+
+  if(title) meeting.title = title;
+  if(agenda) meeting.agenda = agenda;
+  if(participantCount) meeting.participantCount = participantCount;
+  if(status) meeting.status = status;
+  if(submissions) meeting.submissions = submissions;
   await meeting.save();
   return NextResponse.json({ success: true, meeting: meeting.toJSON() });
 }

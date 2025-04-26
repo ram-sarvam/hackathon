@@ -116,6 +116,11 @@ export default function MeetingPage() {
     }
   };
 
+  const checkAllPresentationsComplete = () => {
+    if (!meeting?.submissions) return false;
+    return currentSubmissionIndex === meeting.submissions.length - 1;
+  };
+
   const stopRecording = async () => {
     if (recognitionRef.current && isRecording) {
       recognitionRef.current.stop();
@@ -139,16 +144,32 @@ export default function MeetingPage() {
         toast.dismiss();
         setMeeting(updatedMeeting);
         setFinalTranscript(''); // Reset transcript for next presentation
-        
         // Move to next submission if available
         if (currentSubmissionIndex < (meeting?.submissions.length || 0) - 1) {
           setCurrentSubmissionIndex(prev => prev + 1);
         } else {
           endPresentation();
-          toast.success('All presentations completed!');
+          // Check if this was the last presentation
+          if (checkAllPresentationsComplete()) {
+            // Update meeting status to analyzed
+            const updateResponse = await fetch(`/api/meetings/${params.id}`, {
+              method: 'PUT',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ status: 'presented' }),
+            });
+
+            if (updateResponse.ok) {
+              const updatedMeeting = await updateResponse.json();
+              setMeeting(updatedMeeting.meeting);
+            }
+          }
+
+          toast.success('Analysis complete!');
         }
       } catch (error) {
-        console.error('Error analyzing transcript:', error);
+        console.error('Error analyzing presentation:', error);
         toast.error('Failed to analyze presentation');
       }
     }
@@ -176,10 +197,10 @@ export default function MeetingPage() {
 
             {!isPresentationMode && meeting.submissions?.length > 0 && (
               <button
-                onClick={startPresentation}
-                className="mb-6 bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700"
+                onClick={meeting.status === 'presented' ? () => window.location.href = `/evaluate/${params.id}` : startPresentation}
+                className={`${meeting.status === 'presented' ? 'bg-blue-500 hover:bg-blue-600' : 'bg-green-500 hover:bg-green-600'} text-white px-4 py-2 rounded transition-colors`}
               >
-                Begin Presentation Mode
+                {meeting.status === 'presented' ? 'Begin Evaluation' : 'Begin Presentation Mode'}
               </button>
             )}
 

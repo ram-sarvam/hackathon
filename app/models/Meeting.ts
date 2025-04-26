@@ -5,7 +5,7 @@ export interface IMeeting extends Document {
   agenda: string;
   participantCount?: number;
   createdAt: Date;
-  status: 'pending' | 'active' | 'completed';
+  status: 'pending' | 'presented' | 'analyzed';
   userId: string;
   submissions: {
     teamName: string;
@@ -25,7 +25,7 @@ const MeetingSchema = new Schema({
   userId: { type: String, required: true },
   status: { 
     type: String, 
-    enum: ['pending', 'active', 'completed'],
+    enum: ['pending', 'presented', 'analyzed'],
     default: 'pending'
   },
   submissions: [{

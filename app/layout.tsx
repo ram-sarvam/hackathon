@@ -25,9 +25,13 @@ export default function RootLayout({
   const { userId, setUserId } = useStore();
 
   useEffect(() => {
-    if (!userId) {
+    const storedUserId = localStorage.getItem("userId");
+    if (storedUserId) {
+      setUserId(storedUserId);
+    } else if (!userId) {
       const newUserId = uuid();
       setUserId(newUserId);
+      localStorage.setItem("userId", newUserId);
     }
   }, [userId]);
 
