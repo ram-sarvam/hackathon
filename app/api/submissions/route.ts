@@ -2,9 +2,9 @@ import { NextResponse } from "next/server";
 import connectDB from "@/app/lib/mongodb";
 import Meeting from "@/app/models/Meeting";
 import { v4 as uuidv4 } from "uuid";
-import { join } from "path";
+import mongoose from "mongoose";
 
-const PDF_PARSER_API_URL = "https://api.pdfparser.example/parse"; // Replace with your actual PDF parsing API endpoint
+const PDF_PARSER_API_URL = "http://localhost:3000/api/parse"; // Replace with your actual PDF parsing API endpoint
 
 export async function POST(req: Request) {
   try {
@@ -33,41 +33,58 @@ export async function POST(req: Request) {
       );
     }
 
-    const parserFormData = new FormData();
-    parserFormData.append("pdf", pdf);
+    const submissionId = new mongoose.Types.ObjectId().toHexString();
 
-    let parsedInfo: { ideaName: string; docSummary: string } = {
-      ideaName: "Demo-title",
-      docSummary: "Demo-summary",
-    };
-
-    try{
-      const parserResponse = await fetch(PDF_PARSER_API_URL, {
-        method: "POST",
-        body: parserFormData,
-      });
-  
-      if (parserResponse.ok) {
-        parsedInfo = await parserResponse.json();
-      }
-    }catch(error){
-      console.error("Error parsing PDF:", error);
-    }
-
-    
-    // Add submission with parsed info
+    // Add submission first without parsed info
     meeting.submissions.push({
       teamName: teamName.toString(),
       pdfUrl: `/uploads/${uuidv4()}-${pdf.name}`,
       submittedAt: new Date(),
-      submissionInfo: parsedInfo,
+      submissionInfo: {
+        ideaName: "Processing...",
+        docSummary: {}
+      },
+      _id: submissionId,
     });
 
     await meeting.save();
 
+    // Start parsing in background
+    const parserFormData = new FormData();
+    parserFormData.append("file", pdf);
+
+    fetch(PDF_PARSER_API_URL, {
+      method: "POST",
+      body: parserFormData,
+    }).then(async (parserResponse) => {
+      if (parserResponse.ok) {
+        const parserData = await parserResponse.json();
+        const parsedInfo = {
+          ideaName: parserData.title,
+          docSummary: parserData.summary
+        };
+
+        // Update the submission with parsed info
+        await Meeting.findOneAndUpdate(
+          { _id: meetingId, 'submissions._id': submissionId },
+          { 
+            $set: { 
+              'submissions.$.submissionInfo': parsedInfo 
+            } 
+          }
+        );
+      }
+    }).catch((error) => {
+      console.error("Error parsing PDF:", error);
+    });
+
     return NextResponse.json({
       success: true,
-      submissionInfo: parsedInfo,
+      submissionId,
+      submissionInfo: {
+        ideaName: "Processing...",
+        docSummary: {}
+      }
     });
 
   } catch (error) {
