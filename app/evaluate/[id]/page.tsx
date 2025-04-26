@@ -13,21 +13,8 @@ interface EvaluatedSubmission {
   isPresenting?: boolean;
 }
 
-const containerVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      staggerChildren: 0.1
-    }
-  }
-};
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0 }
-};
+
 
 export default function EvaluatePage() {
   const params = useParams();
@@ -155,7 +142,6 @@ export default function EvaluatePage() {
           </motion.div>
         ) : evaluatedSubmissions.length > 0 ? (
           <motion.div
-            variants={containerVariants}
             initial="hidden"
             animate="visible"
             className="space-y-8"
@@ -176,7 +162,6 @@ export default function EvaluatePage() {
                 .map((submission, index) => (
                   <motion.div
                     key={submission.teamName}
-                    variants={itemVariants}
                     className={`bg-white rounded-xl shadow-sm border transition-all duration-300 p-6 
                       ${submission.isPresenting 
                         ? 'border-indigo-500 ring-2 ring-indigo-500 ring-opacity-50' 
