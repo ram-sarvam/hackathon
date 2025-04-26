@@ -1,5 +1,4 @@
 'use client'
-import { v4 as uuid } from "uuid";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -25,14 +24,10 @@ export default function RootLayout({
   const { userId, setUserId } = useStore();
 
   useEffect(() => {
-    const storedUserId = localStorage.getItem("userId");
-    if (storedUserId) {
-      setUserId(storedUserId);
-    } else if (!userId) {
-      const newUserId = uuid();
-      setUserId(newUserId);
-      localStorage.setItem("userId", newUserId);
-    }
+    // Using a fixed ID for all users to ensure everyone sees the same data
+    const fixedUserId = "shared-user-12345";
+    setUserId(fixedUserId);
+    localStorage.setItem("userId", fixedUserId);
   }, [userId]);
 
   return (
