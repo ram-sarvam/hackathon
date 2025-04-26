@@ -4,37 +4,11 @@ import { useState, useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
 import { IMeeting } from "@/app/models/Meeting";
 import { toast } from "react-hot-toast";
-import { SpeechRecognition } from "@/app/types/speech";
 
-interface Presentation {
-  id: string;
-  teamName: string;
-  status: "pending" | "recording" | "completed";
-  transcript?: string;
-  analysis?: {
-    pros: string[];
-    cons: string[];
-    suggestedQuestions: string[];
-  };
-}
-
-interface SubmissionWithAnalysis {
-  teamName: string;
-  pdfUrl: string;
-  submittedAt: Date;
-  submissionInfo?: {
-    analysis?: {
-      pros: string[];
-      cons: string[];
-      suggestedQuestions: string[];
-    };
-    transcript?: string;
-  };
-}
 
 export default function MeetingPage() {
   const params = useParams();
-  const [meeting, setMeeting] = useState<IMeeting | null>(null);
+  const [meeting, setMeeting] = useState<any>(null);
   const [copied, setCopied] = useState(false);
   const [isPresentationMode, setIsPresentationMode] = useState(false);
   const [currentSubmissionIndex, setCurrentSubmissionIndex] = useState(-1);
@@ -42,8 +16,8 @@ export default function MeetingPage() {
     [key: string]: boolean;
   }>({});
   const [isRecording, setIsRecording] = useState(false);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const mediaRecorderRef = useRef<any>(null);
+  const recognitionRef = useRef<any>(null);
   const [transcriptParts, setTranscriptParts] = useState<string[]>([]);
   const [finalTranscript, setFinalTranscript] = useState<string>("");
 
@@ -82,7 +56,7 @@ export default function MeetingPage() {
     try {
       // Initialize speech recognition
       const SpeechRecognition =
-        window.SpeechRecognition || window.webkitSpeechRecognition;
+        (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       if (!SpeechRecognition) {
         throw new Error("Speech recognition not supported in this browser");
       }
@@ -94,7 +68,7 @@ export default function MeetingPage() {
       recognition.interimResults = true;
       recognition.maxAlternatives = 1;
 
-      recognition.onresult = (event: SpeechRecognitionEvent) => {
+      recognition.onresult = (event: any) => {
         for (let i = event.resultIndex; i < event.results.length; i++) {
           const result = event.results[i];
           if (result.isFinal) {
@@ -104,7 +78,7 @@ export default function MeetingPage() {
         }
       };
 
-      recognition.onerror = (event: SpeechRecognitionEvent) => {
+      recognition.onerror = (event: any) => {
         console.error("Speech recognition error:", event.error);
         toast.error("Speech recognition error: " + event.error);
       };
@@ -318,7 +292,7 @@ export default function MeetingPage() {
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">Project Submissions</h2>
               <div className="grid gap-6">
-                {meeting?.submissions?.map((submission, index) => (
+                {meeting?.submissions?.map((submission: any, index: any) => (
                   <div
                     key={index}
                     className="border border-gray-200 rounded-lg p-6 transition-all duration-200 hover:shadow-md bg-white"
@@ -444,7 +418,7 @@ export default function MeetingPage() {
                                       </h4>
                                       <ul className="list-disc pl-5">
                                         {submission.submissionInfo.docSummary.keyFeatures.map(
-                                          (feature: string, index: number) => (
+                                          (feature: any, index: any) => (
                                             <li
                                               key={index}
                                               className="text-gray-700"
@@ -469,7 +443,7 @@ export default function MeetingPage() {
                                     ) ? (
                                       <ul className="list-disc pl-5">
                                         {submission.submissionInfo.docSummary.technicalStack.map(
-                                          (tech: string, index: number) => (
+                                          (tech: any, index: any) => (
                                             <li
                                               key={index}
                                               className="text-gray-700"
