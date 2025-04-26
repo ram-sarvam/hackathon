@@ -1,190 +1,124 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { getLocation, saveUserData, getUserData } from './utils/handlers';
+import { useState } from "react";
+import { Toaster, toast } from 'react-hot-toast';
+import { motion } from 'framer-motion';
 
-export default function Home() {
-  const [name, setName] = useState('');
-  const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
-  const [transport, setTransport] = useState<string[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [step, setStep] = useState(1);
+const Home = () => {
+  const [title, setTitle] = useState("");
+  const [agenda, setAgenda] = useState("");
+  const [participantCount, setParticipantCount] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const transportOptions = [
-    { id: 'car', label: 'Car', icon: '🚗' },
-    { id: 'transit', label: 'Public Transit', icon: '🚇' },
-    { id: 'bicycle', label: 'Bicycle', icon: '🚲' },
-    { id: 'walking', label: 'Walking', icon: '🚶' },
-    { id: 'rideshare', label: 'Ride-sharing', icon: '🚕' }
-  ];
-
-  useEffect(() => {
-    const savedData = getUserData();
-    if (savedData) {
-      setName(savedData.name);
-      setLocation(savedData.location);
-      setTransport(savedData.transportPreferences);
-    }
-  }, []);
-
-  const handleLocationClick = async () => {
-    setLoading(true);
-    setError('');
-    try {
-      const position = await getLocation();
-      setLocation({
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude
-      });
-    } catch (err) {
-      setError('Failed to get location. Please try again.');
-    }
-    setLoading(false);
-  };
-
-  const handleTransportToggle = (optionId: string) => {
-    setTransport(prev =>
-      prev.includes(optionId)
-        ? prev.filter(t => t !== optionId)
-        : [...prev, optionId]
-    );
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !location || transport.length === 0) {
-      setError('Please fill in all fields');
-      return;
-    }
-    saveUserData({
-      name,
-      location,
-      transportPreferences: transport
-    });
-    setError('');
-    setStep(4); // Show success state
-  };
+    setIsLoading(true);
 
-  const renderStep = () => {
-    switch(step) {
-      case 1:
-        return (
-          <div className="space-y-4 animate-fadeIn">
-            <h2 className="text-xl font-semibold text-gray-800">What's your name?</h2>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
-              placeholder="Enter your name"
-            />
-            <button
-              onClick={() => name ? setStep(2) : setError('Please enter your name')}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Continue
-            </button>
-          </div>
-        );
+    try {
+      const response = await fetch("/api/meetings", {
+        method: "POST",
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          title,
+          agenda,
+          participantCount: parseInt(participantCount) || 1,
+        }),
+      });
       
-      case 2:
-        return (
-          <div className="space-y-4 animate-fadeIn">
-            <h2 className="text-xl font-semibold text-gray-800">Where are you located?</h2>
-            <button
-              onClick={handleLocationClick}
-              disabled={loading}
-              className="w-full bg-white border-2 border-gray-200 py-3 rounded-lg hover:border-blue-500 transition-all flex items-center justify-center space-x-2"
-            >
-              <span className="text-xl">📍</span>
-              <span>{loading ? 'Getting location...' : 'Use Current Location'}</span>
-            </button>
-            {location && (
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <p className="text-blue-800">
-                  Location found! 📍
-                </p>
-                <p className="text-sm text-blue-600">
-                  Lat: {location.latitude.toFixed(4)}, Long: {location.longitude.toFixed(4)}
-                </p>
-              </div>
-            )}
-            {location && (
-              <button
-                onClick={() => setStep(3)}
-                className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Continue
-              </button>
-            )}
-          </div>
-        );
-      
-      case 3:
-        return (
-          <div className="space-y-4 animate-fadeIn">
-            <h2 className="text-xl font-semibold text-gray-800">How do you prefer to travel?</h2>
-            <p className="text-sm text-gray-600">Select all that apply</p>
-            <div className="grid grid-cols-2 gap-3">
-              {transportOptions.map((option) => (
-                <button
-                  key={option.id}
-                  onClick={() => handleTransportToggle(option.id)}
-                  className={`p-4 rounded-lg border-2 transition-all ${transport.includes(option.id) ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-200'}`}
-                >
-                  <span className="text-2xl mb-2 block">{option.icon}</span>
-                  <span className="text-sm font-medium">{option.label}</span>
-                </button>
-              ))}
-            </div>
-            {transport.length > 0 && (
-              <button
-                onClick={handleSubmit}
-                className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Complete Setup
-              </button>
-            )}
-          </div>
-        );
-      
-      case 4:
-        return (
-          <div className="text-center space-y-4 animate-fadeIn">
-            <div className="text-5xl mb-4">🎉</div>
-            <h2 className="text-xl font-semibold text-gray-800">All set, {name}!</h2>
-            <p className="text-gray-600">Your preferences have been saved successfully.</p>
-          </div>
-        );
+      if (!response.ok) {
+        throw new Error('Failed to create meeting');
+      }
+
+      const data = await response.json();
+      toast.success('Meeting created successfully!');
+      window.location.href = `/meetings/${data.meeting.id}`;
+    } catch (error) {
+      toast.error('Failed to create meeting. Please try again.');
+      console.error("Failed to create meeting:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
-      <div className="max-w-md mx-auto pt-16 px-4">
-        <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8">
-          <div className="flex items-center justify-between mb-8">
-            <h1 className="text-2xl font-bold text-gray-800">Profile Setup</h1>
-            <div className="flex space-x-1">
-              {[1, 2, 3].map((i) => (
-                <div
-                  key={i}
-                  className={`w-2 h-2 rounded-full ${i === step ? 'bg-blue-600' : i < step ? 'bg-blue-200' : 'bg-gray-200'}`}
-                />
-              ))}
-            </div>
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-blue-100 py-12 px-4 sm:px-6 lg:px-8">
+      <Toaster position="top-center" />
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="max-w-md mx-auto bg-white rounded-xl shadow-lg p-8"
+      >
+        <h1 className="text-3xl font-bold text-center mb-8 text-gray-800">
+          Create New Meeting
+        </h1>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
+              Meeting Title <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="mt-1 block w-full rounded-lg border border-gray-200 px-4 py-2 text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-20 transition-colors duration-200"
+              placeholder="Enter meeting title"
+              required
+            />
           </div>
-          
-          {error && (
-            <div className="mb-4 p-3 rounded-lg bg-red-50 text-red-600 text-sm">
-              {error}
-            </div>
-          )}
-          
-          {renderStep()}
-        </div>
-      </div>
-    </main>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
+              Agenda <span className="text-red-500">*</span>
+            </label>
+            <textarea
+              value={agenda}
+              onChange={(e) => setAgenda(e.target.value)}
+              className="mt-1 block w-full rounded-lg border border-gray-200 px-4 py-2 text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-20 transition-colors duration-200"
+              rows={4}
+              placeholder="Enter meeting agenda"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
+              Number of Participants <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="number"
+              value={participantCount}
+              onChange={(e) => setParticipantCount(e.target.value)}
+              className="mt-1 block w-full rounded-lg border border-gray-200 px-4 py-2 text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-20 transition-colors duration-200"
+              min="1"
+              placeholder="Enter number of participants"
+              required
+            />
+          </div>
+
+          <motion.button
+            type="submit"
+            disabled={isLoading}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className={`w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg text-sm font-semibold text-white transition-colors duration-200 ${isLoading ? 'bg-indigo-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700'}`}
+          >
+            {isLoading ? (
+              <>
+                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Creating...
+              </>
+            ) : 'Create Meeting'}
+          </motion.button>
+        </form>
+      </motion.div>
+    </div>
   );
-}
+};
+
+export default Home;
